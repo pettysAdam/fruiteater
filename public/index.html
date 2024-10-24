@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<title>Multiplayer Webcam Game</title>
+	<style>
+		body {
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			background: #1a1a1a;
+			color: white;
+			font-family: Arial, sans-serif;
+			margin: 0;
+			min-height: 100vh;
+		}
+
+		#gameContainer {
+			position: relative;
+			margin: 20px;
+		}
+
+		#gameCanvas {
+			border: 2px solid #333;
+			background: black;
+		}
+
+		#webcamVideo {
+			display: none;
+		}
+
+		#scoreboard {
+			position: absolute;
+			top: 10px;
+			right: 10px;
+			background: rgba(0, 0, 0, 0.7);
+			padding: 10px;
+			border-radius: 5px;
+		}
+
+		.player-score {
+			margin: 5px 0;
+		}
+
+		#startButton {
+			font-size: 18px;
+			padding: 10px 20px;
+			margin: 10px;
+			cursor: pointer;
+			background: #4CAF50;
+			border: none;
+			color: white;
+			border-radius: 5px;
+		}
+
+		#nameInput {
+			padding: 5px;
+			margin: 10px;
+			font-size: 16px;
+		}
+
+		.controls {
+			display: flex;
+			align-items: center;
+			gap: 20px;
+			margin: 10px;
+		}
+
+		.debug-switch {
+			position: relative;
+			display: inline-flex;
+			align-items: center;
+			gap: 10px;
+		}
+
+		.debug-switch input {
+			opacity: 0;
+			width: 0;
+			height: 0;
+		}
+
+		.slider {
+			position: relative;
+			cursor: pointer;
+			width: 60px;
+			height: 34px;
+			background-color: #ccc;
+			transition: .4s;
+			border-radius: 34px;
+		}
+
+		.slider:before {
+			position: absolute;
+			content: "";
+			height: 26px;
+			width: 26px;
+			left: 4px;
+			bottom: 4px;
+			background-color: white;
+			transition: .4s;
+			border-radius: 50%;
+		}
+
+		input:checked+.slider {
+			background-color: #2196F3;
+		}
+
+		input:checked+.slider:before {
+			transform: translateX(26px);
+		}
+
+		.switch-label {
+			color: white;
+			font-size: 16px;
+		}
+	</style>
+	</style>
+	<script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh"></script>
+	<script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils"></script>
+	<script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils"></script>
+</head>
+
+<body>
+	<h1>Multiplayer Star Catcher!</h1>
+	<div id="gameContainer">
+		<canvas id="gameCanvas" width="640" height="480"></canvas>
+		<video id="webcamVideo" width="640" height="480" autoplay playsinline></video>
+		<div id="scoreboard"></div>
+	</div>
+
+	<button id="startButton">Start Game</button>
+	
+	<div class="controls">
+		<input type="text" id="nameInput" placeholder="Enter your name" maxlength="20">
+		<label class="debug-switch">
+			<input type="checkbox" id="debugToggle">
+			<span class="slider round"></span>
+			<span class="switch-label">Debug Mode</span>
+		</label>
+	</div>
+	<script defer src="/socket.io/socket.io.js"></script>
+	<script defer src="app.js"></script>
+</body>
+
+</html>
