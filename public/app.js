@@ -299,7 +299,8 @@ async function startGame() {
 
 	const playerName = nameInput.value.trim();
 	if (!playerName) {
-		playerName = 'Player ' + Math.floor(Math.random() * 1000);
+		showError('Please enter your name before starting');
+		return;
 	}
 
 	try {
