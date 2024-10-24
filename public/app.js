@@ -297,14 +297,18 @@ async function startGame() {
 		return;
 	}
 
-	if (!nameInput.value.trim()) {
-		showError('Please enter your name before starting');
-		return;
+	const playerName = nameInput.value.trim();
+	if (!playerName) {
+		playerName = 'Player ' + Math.floor(Math.random() * 1000);
 	}
 
 	try {
 		isGameRunning = true;
 		startButton.textContent = 'Stop Game';
+
+		// Send player name to the server
+		socket.emit('startGame', { playerId, playerName });
+
 		gameLoop();
 	} catch (error) {
 		console.error('Error starting game:', error);
@@ -458,7 +462,7 @@ function gameLoop() {
 // Add this code to handle the debug mode toggle
 const debugToggle = document.getElementById('debugToggle');
 debugToggle.addEventListener('change', (event) => {
-    debugMode = event.target.checked;
+	debugMode = event.target.checked;
 });
 
 startButton.addEventListener('click', async () => {

@@ -98,6 +98,17 @@ io.on('connection', (socket) => {
 		}
 	});
 
+	// Handle player starting the game
+	socket.on('startGame', (data) => {
+		if (typeof data.playerName === 'string') {
+			const player = players.get(socket.id);
+			console.log('Player', player.id, 'started the game');
+			if (player) {
+				player.name = data.playerName.slice(0, 20); // Limit name length
+			}
+		}
+	});
+
 	// Handle player name update
 	socket.on('updateName', (name) => {
 		if (typeof name !== 'string') return;
