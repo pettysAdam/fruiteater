@@ -17,6 +17,25 @@ let mouthArea = null;
 let mouthOpen = false;
 let debugMode = false; // Set to false to disable wireframe
 let playerNamePosition = null;
+let fruits = [];
+
+// Load fruit images
+const fruitImages = {
+	apple: new Image(),
+	blueberry: new Image(),
+	lemon: new Image(),
+	orange: new Image(),
+	raspberry: new Image(),
+	strawberry: new Image()
+};
+
+fruitImages.apple.src = 'fruits/apple.png';
+fruitImages.blueberry.src = 'fruits/blueberry.png';
+fruitImages.lemon.src = 'fruits/lemon.png';
+fruitImages.orange.src = 'fruits/orange.png';
+fruitImages.raspberry.src = 'fruits/raspberry.png';
+fruitImages.strawberry.src = 'fruits/strawberry.png';
+
 
 // Initialize webcam and face detection on page load
 document.addEventListener('DOMContentLoaded', initializeWebcam);
@@ -25,21 +44,21 @@ document.addEventListener('DOMContentLoaded', initializeWebcam);
 socket.on('gameInit', (data) => {
 	playerId = data.playerId;
 	players = new Map(data.players.map(p => [p.id, p]));
-	stars = data.stars;
+	fruits = data.fruits || []; // Ensure fruits is an array
 	updateScoreboard();
 });
 
 socket.on('gameState', (data) => {
 	players = new Map(data.players.map(p => [p.id, p]));
-	stars = data.stars;
+	fruits = data.fruits || []; // Ensure fruits is an array
 	updateScoreboard();
 });
 
-socket.on('starCaught', (data) => {
-	const player = players.get(data.playerId);
-	if (player) {
-		player.score = data.newScore;
-		updateScoreboard();
+// Draw fruits
+fruits.forEach(fruit => {
+	const fruitImage = fruitImages[fruit.type];
+	if (fruitImage) {
+		ctx.drawImage(fruitImage, fruit.x - fruit.radius, fruit.y - fruit.radius, fruit.radius * 2, fruit.radius * 2);
 	}
 });
 
@@ -225,7 +244,7 @@ function onResults(results) {
 
 		if (isGameRunning) {
 			socket.emit('playerMove', mouthPosition);
-			checkStarCollisions();
+			checkFruitCollisions();
 		}
 
 		if (debugMode) {
@@ -350,70 +369,30 @@ function drawMouthHitbox() {
 	}
 }
 
-function checkStarCollisions() {
-	stars.forEach(star => {
-		if (isStarInMouth(star)) {
-			// Emit star caught event only if mouth is open
+function checkFruitCollisions() {
+	fruits.forEach(fruit => {
+		if (isFruitInMouth(fruit)) {
+			// Emit fruit caught event only if mouth is open
 			if (mouthOpen) {
-				socket.emit('starCaught', {
-					starId: star.id,
+				socket.emit('fruitCaught', {
+					fruitId: fruit.id,
 					playerId: playerId
 				});
-
-				// Visual feedback for star being "eaten"
-				createEatingEffect(star);
 			}
 		}
 	});
 }
 
-function isStarInMouth(star) {
+function isFruitInMouth(fruit) {
 	const centerX = (mouthArea.left + mouthArea.right) / 2;
 	const centerY = (mouthArea.top + mouthArea.bottom) / 2;
 	const radiusX = (mouthArea.right - mouthArea.left) / 2;
 	const radiusY = (mouthArea.bottom - mouthArea.top) / 2;
 
-	// Check if the star is within the ellipse
-	const dx = star.x - centerX;
-	const dy = star.y - centerY;
+	// Check if the fruit is within the ellipse
+	const dx = fruit.x - centerX;
+	const dy = fruit.y - centerY;
 	return (dx * dx) / (radiusX * radiusX) + (dy * dy) / (radiusY * radiusY) <= 1;
-}
-
-function createEatingEffect(star) {
-	// Create particles for eating effect
-	const particles = [];
-	const particleCount = 5;
-
-	for (let i = 0; i < particleCount; i++) {
-		particles.push({
-			x: star.x,
-			y: star.y,
-			dx: (Math.random() - 0.5) * 4,
-			dy: (Math.random() - 0.5) * 4,
-			radius: star.radius / 2,
-			alpha: 1,
-			color: star.color
-		});
-	}
-
-	// Animate particles
-	function animateParticles() {
-		particles.forEach((particle, index) => {
-			particle.x += particle.dx;
-			particle.y += particle.dy;
-			particle.alpha -= 0.02;
-
-			if (particle.alpha <= 0) {
-				particles.splice(index, 1);
-			}
-		});
-
-		if (particles.length > 0) {
-			requestAnimationFrame(animateParticles);
-		}
-	}
-
-	animateParticles();
 }
 
 function gameLoop() {
@@ -425,13 +404,12 @@ function gameLoop() {
 	// Draw video frame
 	ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-	// Draw stars
-	stars.forEach(star => {
-		ctx.beginPath();
-		ctx.arc(star.x, star.y, star.radius, 0, Math.PI * 2);
-		ctx.fillStyle = star.color;
-		ctx.fill();
-		ctx.closePath();
+	// Draw fruits
+	fruits.forEach(fruit => {
+		const fruitImage = fruitImages[fruit.type];
+		if (fruitImage) {
+			ctx.drawImage(fruitImage, fruit.x - fruit.radius, fruit.y - fruit.radius, fruit.radius * 3, fruit.radius * 3);
+		}
 	});
 
 	// Draw all players

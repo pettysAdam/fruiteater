@@ -12,42 +12,46 @@ app.use(express.static(path.join(__dirname, 'public')));
 // Game state management
 const players = new Map();
 const gameState = {
-	stars: [],
-	maxStars: 8
+	fruits: [],
+	maxFruits: 8
 };
 
-// Star creation helper function
-function createStar() {
+// Fruit creation helper function
+function createFruit() {
+	const fruitTypes = ['apple', 'blueberry', 'lemon', 'orange', 'raspberry', 'strawberry'];
+	const randomType = fruitTypes[Math.floor(Math.random() * fruitTypes.length)];
+
 	return {
 		id: Math.random().toString(36).substr(2, 9),
 		x: Math.random() * 640,
 		y: 0,
 		speed: 2 + Math.random() * 3,
 		radius: 10,
-		color: `hsl(${Math.random() * 360}, 100%, 50%)`
+		color: `hsl(${Math.random() * 360}, 100%, 50%)`,
+		type: randomType
 	};
 }
 
-// Initialize stars
-for (let i = 0; i < gameState.maxStars; i++) {
-	gameState.stars.push(createStar());
+// Initialize fruits
+for (let i = 0; i < gameState.maxFruits; i++) {
+	gameState.fruits.push(createFruit());
 }
 
 // Game loop
 const gameLoop = setInterval(() => {
-	// Update star positions
-	gameState.stars.forEach(star => {
-		star.y += star.speed;
-		if (star.y > 480) {
-			star.y = 0;
-			star.x = Math.random() * 640;
+	// Update fruit positions
+	gameState.fruits.forEach(fruit => {
+		fruit.y += fruit.speed;
+		if (fruit.y > 480) {
+			fruit.y = 0;
+			fruit.x = Math.random() * 640;
 		}
 	});
 
 	// Broadcast game state to all clients
 	io.emit('gameState', {
 		players: Array.from(players.values()),
-		stars: gameState.stars
+		fruits: gameState.fruits
 	});
 }, 16);
 
@@ -68,7 +72,7 @@ io.on('connection', (socket) => {
 	socket.emit('gameInit', {
 		playerId: socket.id,
 		players: Array.from(players.values()),
-		stars: gameState.stars
+		fruits: gameState.fruits
 	});
 
 	// Handle player movement
@@ -79,17 +83,17 @@ io.on('connection', (socket) => {
 		if (player) {
 			player.position = position;
 
-			// Check for star collisions
-			gameState.stars.forEach(star => {
-				const dx = star.x - position.x;
-				const dy = star.y - position.y;
+			// Check for fruit collisions
+			gameState.fruits.forEach(fruit => {
+				const dx = fruit.x - position.x;
+				const dy = fruit.y - position.y;
 				const distance = Math.sqrt(dx * dx + dy * dy);
 
-				if (distance < star.radius + 30) {
+				if (distance < fruit.radius + 30) {
 					player.score += 10;
-					star.y = 0;
-					star.x = Math.random() * 640;
-					io.emit('starCaught', {
+					fruit.y = 0;
+					fruit.x = Math.random() * 640;
+					io.emit('fruitCaught', {
 						playerId: socket.id,
 						newScore: player.score
 					});
